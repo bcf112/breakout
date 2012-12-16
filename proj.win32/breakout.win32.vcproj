@@ -213,6 +213,10 @@
 				RelativePath="..\Classes\MyContactListener.cpp"
 				>
 			</File>
+			<File
+				RelativePath="..\Classes\StartMenuScene.cpp"
+				>
+			</File>
 		</Filter>
 		<Filter
 			Name="include"
@@ -240,6 +244,10 @@
 			</File>
 			<File
 				RelativePath=".\resource.h"
+				>
+			</File>
+			<File
+				RelativePath="..\Classes\StartMenuScene.h"
 				>
 			</File>
 		</Filter>

@@ -53,12 +53,14 @@ bool HelloWorld::init()
             this,
             menu_selector(HelloWorld::menuCloseCallback));
         CC_BREAK_IF(! pCloseItem);
+		CCMenuItemImage *pPauseItem=CCMenuItemImage::create("Pause.png", NULL, this, menu_selector(HelloWorld::menuPauseCallback));
 
         // Place the menu item bottom-right conner.
         pCloseItem->setPosition(ccp(CCDirector::sharedDirector()->getWinSize().width - 20, 20));
+		pPauseItem->setPosition(ccp(CCDirector::sharedDirector()->getWinSize().width - 70, 20));
 
         // Create a menu with the "close" menu item, it's an auto release object.
-        CCMenu* pMenu = CCMenu::create(pCloseItem, NULL);
+		CCMenu* pMenu = CCMenu::create(pCloseItem, pPauseItem, NULL);
         pMenu->setPosition(CCPointZero);
         CC_BREAK_IF(! pMenu);
 
@@ -185,37 +187,65 @@ bool HelloWorld::init()
 
 		//block을 추가하자
 		for(int i=0; i<4; i++){
-		static int padding=20;
+			for(int j=0; j<2; j++){
+			static int xPadding=20;
+			static int yPadding=40;
 
-		//layer에 block 만들기
-		CCSprite *block=CCSprite::create("block.jpg");
-		int xOffset=padding+block->getContentSize().width/2 + ((block->getContentSize().width+padding)*i);
-		block->setPosition(ccp(xOffset, 250));
-		block->setTag(2);
-		this->addChild(block);
+			//layer에 block 만들기
+			CCSprite *block=CCSprite::create("block.jpg");
+			int xOffset=xPadding+block->getContentSize().width/2 + ((block->getContentSize().width+xPadding)*i);
+			int yOffset=yPadding+block->getContentSize().height/2 + ((block->getContentSize().height+yPadding)*j);
+			block->setPosition(ccp(xOffset, 250-yOffset));
+			block->setTag(2);
+			this->addChild(block);
 
-		//block body 만들기
-		b2BodyDef blockBodyDef;
-		blockBodyDef.type=b2_dynamicBody;
-		blockBodyDef.position.Set(xOffset/PTM_RATIO, 250/PTM_RATIO);
-		blockBodyDef.userData=block;
-		b2Body *blockBody=_world->CreateBody(&blockBodyDef);
+			//block body 만들기
+			b2BodyDef blockBodyDef;
+			blockBodyDef.type=b2_dynamicBody;
+			blockBodyDef.position.Set(xOffset/PTM_RATIO, 250/PTM_RATIO);
+			blockBodyDef.userData=block;
+			b2Body *blockBody=_world->CreateBody(&blockBodyDef);
 
-		//block shape 만들기
-		b2PolygonShape blockShape;
-		blockShape.SetAsBox(block->getContentSize().width/PTM_RATIO/2, block->getContentSize().height/PTM_RATIO/2);
+			//block shape 만들기
+			b2PolygonShape blockShape;
+			blockShape.SetAsBox(block->getContentSize().width/PTM_RATIO/2, block->getContentSize().height/PTM_RATIO/2);
 
-		//shape definition과 body에 추가하기
-		b2FixtureDef blockShapeDef;
-		blockShapeDef.shape=&blockShape;
-		blockShapeDef.density=10.0;
-		blockShapeDef.friction=0.0;
-		blockShapeDef.restitution=0.1f;
-		blockBody->CreateFixture(&blockShapeDef);
+			//shape definition과 body에 추가하기
+			b2FixtureDef blockShapeDef;
+			blockShapeDef.shape=&blockShape;
+			blockShapeDef.density=10.0;
+			blockShapeDef.friction=0.0;
+			blockShapeDef.restitution=0.1f;
+			blockBody->CreateFixture(&blockShapeDef);
+
+			//paddle의 움직임 제한하기
+			/*b2PrismaticJointDef jointDef;
+			b2Vec2 worldAxis(1.0f, 0.0f);
+			jointDef.collideConnected=false;
+			jointDef.Initialize(blockBody, _groundBody, _groundBody->GetWorldCenter(), worldAxis);
+			_world->CreateJoint(&jointDef);*/
+			}
 		}
 
-
+		//배경음악
 		CocosDenshion::SimpleAudioEngine::sharedEngine()->playBackgroundMusic("background-music-aac.caf");
+
+		//pause 상태 감시
+		HelloWorld::isPaused=false;
+
+		//ProgressTimer 생성하기
+		CCSprite *progressImage=CCSprite::create("paddle.jpg");
+		CCProgressTimer *progressTimeBar=CCProgressTimer::create(progressImage);
+		progressTimeBar->setType(kCCProgressTimerTypeBar);
+		progressTimeBar->setPosition(ccp(40, 10));
+		progressTimeBar->setPercentage(100.0f);
+		this->addChild(progressTimeBar);
+
+		CCCallFunc *cbTimerFinish=CCCallFunc::create(this, callfunc_selector(HelloWorld::gameOverCallback));
+		CCProgressFromTo *progressToZero=CCProgressFromTo::create(30.0f, 100.0f, 0.0f);
+		CCFiniteTimeAction *sequence=CCSequence::create(progressToZero, cbTimerFinish, NULL);
+		
+		progressTimeBar->runAction(sequence);
 
 		this->schedule(schedule_selector(HelloWorld::tick));
 		this->setTouchEnabled(true);
@@ -279,7 +309,15 @@ void HelloWorld::ccTouchesEnded(CCSet *touches, CCEvent *pEvent){
 	}
 }
 
-	
+void HelloWorld::menuPauseCallback(CCObject* pSender){
+	if(isPaused){
+		CCDirector::sharedDirector()->resume();
+		isPaused=false;
+	}else{
+		CCDirector::sharedDirector()->pause();
+		isPaused=true;
+	}
+}
 
 void HelloWorld::menuCloseCallback(CCObject* pSender)
 {
@@ -332,7 +370,6 @@ void HelloWorld::tick(float dt){
 
 		if((contact.fixtureA==_bottomFixture && contact.fixtureB==_ballFixture) ||
 			(contact.fixtureA==_ballFixture && contact.fixtureB==_bottomFixture)){
-				Trace("in");
 				GameOverScene *gameOverScene=GameOverScene::create();
 				gameOverScene->getLayer()->getLabel()->setString("You Lose!");
 				CCDirector::sharedDirector()->replaceScene(gameOverScene);
@@ -382,26 +419,16 @@ void HelloWorld::tick(float dt){
 	}
 }
 
+void HelloWorld::gameOverCallback(){
+	GameOverScene *gameOverScene=GameOverScene::create();
+	gameOverScene->getLayer()->getLabel()->setString("You Lose!");
+	CCDirector::sharedDirector()->replaceScene(gameOverScene);
+}
+
 HelloWorld::~HelloWorld()
 {
 	CC_SAFE_DELETE(_world);
 	_groundBody=NULL;
 	delete _contactListener;
 }
-
-void HelloWorld::Trace(char *szFormat, ...)
-{
-    char szTempBuf[2048] ;
-	TCHAR *ttt;
-    va_list vlMarker ;
-
-    va_start(vlMarker,szFormat) ;
-    vsprintf(szTempBuf,szFormat,vlMarker) ;
-    va_end(vlMarker) ;
-
-	ttt = (TCHAR*)calloc(1,strlen(szTempBuf)*2);
-	MultiByteToWideChar(CP_ACP, 0, szTempBuf, strlen(szTempBuf), ttt, strlen(szTempBuf)*2);
-    OutputDebugString(ttt) ;
-}
-
 

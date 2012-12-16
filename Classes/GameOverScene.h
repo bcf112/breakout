@@ -8,16 +8,16 @@ public:
 	CREATE_FUNC(GameOverLayer);
 	CC_SYNTHESIZE_READONLY(CCLabelTTF*, _label, Label);
 
-	virtual ~GameOverLayer();
+	~GameOverLayer();
 	bool init();
 	void gameOverDone();
+	void menuRestartCallback(CCObject* pSender);
 };
 
 class GameOverScene : public CCScene
 {
 public:
 	CREATE_FUNC(GameOverScene);
-	//SCENE_NODE_FUNC(GameOverScene);
 	CC_SYNTHESIZE_READONLY(GameOverLayer*, _layer, Layer);
 
 	~GameOverScene();

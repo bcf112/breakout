@@ -19,6 +19,8 @@ public:
     
     // a selector callback
     void menuCloseCallback(CCObject* pSender);
+	void menuPauseCallback(CCObject* pSender);
+	void gameOverCallback();
 
     // implement the "static node()" method manually
     CREATE_FUNC(HelloWorld);
@@ -32,8 +34,6 @@ public:
 	virtual void ccTouchesCancelled(CCSet *touches, CCEvent *pEvent);
 	virtual void ccTouchesEnded(CCSet *touches, CCEvent *pEvent);
 
-	void Trace(char *szFormat, ...);
-
 private:
 	b2World *_world;
 	b2Body *_groundBody;
@@ -44,6 +44,7 @@ private:
 	b2MouseJoint *_mouseJoint;
 
 	MyContactListener *_contactListener;
+	bool isPaused;
 
 };
 
