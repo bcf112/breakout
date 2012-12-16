@@ -1,4 +1,4 @@
-#include "Box2D.h"
+#include "Box2D/Box2D.h"
 #include <vector>
 #include <algorithm>
 
@@ -30,5 +30,5 @@ public:
 	virtual void EndContact(b2Contact *contact);
 	virtual void PreSolve(b2Contact *contact, const b2Manifold *oldManifold);
 	virtual void PostSolve(b2Contact *contact, const b2ContactImpulse *impulse);
-}
-	
+
+};

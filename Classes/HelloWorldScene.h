@@ -32,6 +32,8 @@ public:
 	virtual void ccTouchesCancelled(CCSet *touches, CCEvent *pEvent);
 	virtual void ccTouchesEnded(CCSet *touches, CCEvent *pEvent);
 
+	void Trace(char *szFormat, ...);
+
 private:
 	b2World *_world;
 	b2Body *_groundBody;
@@ -42,6 +44,7 @@ private:
 	b2MouseJoint *_mouseJoint;
 
 	MyContactListener *_contactListener;
+
 };
 
 #endif  // __HELLOWORLD_SCENE_H__

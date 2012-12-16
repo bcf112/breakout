@@ -2,6 +2,8 @@
 #define PTM_RATIO 32.0
 
 #include "HelloWorldScene.h"
+#include "GameOverScene.h"
+#include <SimpleAudioEngine.h>
 
 using namespace cocos2d;
 
@@ -105,7 +107,7 @@ bool HelloWorld::init()
 		//b2Vec2(0, 0) -> 아랫쪽에서 왼쪽
 		//b2Vec2(winSize.width/PTM_RATIO) -> 아랫쪽에서 오른쪽
 		groundBox.Set(b2Vec2(0, 0), b2Vec2(winSize.width/PTM_RATIO, 0));
-		_groundBody->CreateFixture(&groundBoxDef);
+		_bottomFixture=_groundBody->CreateFixture(&groundBoxDef);
 		groundBox.Set(b2Vec2(0, 0), b2Vec2(0, winSize.height/PTM_RATIO));
 		_groundBody->CreateFixture(&groundBoxDef);
 		groundBox.Set(b2Vec2(0, winSize.height/PTM_RATIO), b2Vec2(winSize.width/PTM_RATIO, winSize.height/PTM_RATIO));
@@ -176,9 +178,44 @@ bool HelloWorld::init()
 		jointDef.collideConnected=true;
 		jointDef.Initialize(_paddleBody, _groundBody, _paddleBody->GetWorldCenter(), worldAxis);
 		_world->CreateJoint(&jointDef);
-		
-		
-		
+
+
+		_contactListener=new MyContactListener();
+		_world->SetContactListener(_contactListener);
+
+		//block을 추가하자
+		for(int i=0; i<4; i++){
+		static int padding=20;
+
+		//layer에 block 만들기
+		CCSprite *block=CCSprite::create("block.jpg");
+		int xOffset=padding+block->getContentSize().width/2 + ((block->getContentSize().width+padding)*i);
+		block->setPosition(ccp(xOffset, 250));
+		block->setTag(2);
+		this->addChild(block);
+
+		//block body 만들기
+		b2BodyDef blockBodyDef;
+		blockBodyDef.type=b2_dynamicBody;
+		blockBodyDef.position.Set(xOffset/PTM_RATIO, 250/PTM_RATIO);
+		blockBodyDef.userData=block;
+		b2Body *blockBody=_world->CreateBody(&blockBodyDef);
+
+		//block shape 만들기
+		b2PolygonShape blockShape;
+		blockShape.SetAsBox(block->getContentSize().width/PTM_RATIO/2, block->getContentSize().height/PTM_RATIO/2);
+
+		//shape definition과 body에 추가하기
+		b2FixtureDef blockShapeDef;
+		blockShapeDef.shape=&blockShape;
+		blockShapeDef.density=10.0;
+		blockShapeDef.friction=0.0;
+		blockShapeDef.restitution=0.1f;
+		blockBody->CreateFixture(&blockShapeDef);
+		}
+
+
+		CocosDenshion::SimpleAudioEngine::sharedEngine()->playBackgroundMusic("background-music-aac.caf");
 
 		this->schedule(schedule_selector(HelloWorld::tick));
 		this->setTouchEnabled(true);
@@ -251,6 +288,10 @@ void HelloWorld::menuCloseCallback(CCObject* pSender)
 }
 
 void HelloWorld::tick(float dt){
+
+	//승리 판별
+	bool blockFound=false;
+
 	//step 함수로 속도와 위치의 iteration을 정할 수 있다. 값은 8-10 사이로 
 	_world->Step(dt, 10, 10);
 
@@ -275,9 +316,69 @@ void HelloWorld::tick(float dt){
 				}else if(speed < maxSpeed){
 					b->SetLinearDamping(0.0);
 				}
-
+			}
+			if(ballData->getTag()==2){
+				blockFound=true;
 			}
 		}
+	}
+
+
+	// 공이 바닥과 닿았는지 확인한다. 블럭에 닿으면 부시기
+	std::vector<b2Body *>toDestory;
+	std::vector<MyContact>::iterator pos;
+	for(pos=_contactListener->_contacts.begin(); pos!=_contactListener->_contacts.end(); ++pos){
+		MyContact contact=*pos;
+
+		if((contact.fixtureA==_bottomFixture && contact.fixtureB==_ballFixture) ||
+			(contact.fixtureA==_ballFixture && contact.fixtureB==_bottomFixture)){
+				Trace("in");
+				GameOverScene *gameOverScene=GameOverScene::create();
+				gameOverScene->getLayer()->getLabel()->setString("You Lose!");
+				CCDirector::sharedDirector()->replaceScene(gameOverScene);
+		}
+
+		//fixture로부터 body를 얻어올 수 있다.
+		b2Body *bodyA=contact.fixtureA->GetBody();
+		b2Body *bodyB=contact.fixtureB->GetBody();
+		if(bodyA->GetUserData()!=NULL && bodyB->GetUserData()!=NULL){
+			CCSprite *spriteA=(CCSprite *)bodyA->GetUserData();
+			CCSprite *spriteB=(CCSprite *)bodyB->GetUserData();
+
+			//SpriteA는 공이고, SpriteB는 블럭
+			if(spriteA->getTag()==1 && spriteB->getTag()==2){
+				if(std::find(toDestory.begin(), toDestory.end(), bodyB)==toDestory.end()){
+					toDestory.push_back(bodyB);
+				}
+			}
+
+			//SpriteA가 블럭이고 SpriteB가 공일 때
+			if(spriteA->getTag()==2 && spriteB->getTag()==1){
+				if(std::find(toDestory.begin(), toDestory.end(), bodyA)==toDestory.end()){
+					toDestory.push_back(bodyA);
+				}
+			}
+		}
+	}
+
+	std::vector<b2Body *>::iterator pos2;
+	for(pos2=toDestory.begin(); pos2!=toDestory.end(); ++pos2){
+		b2Body *body=*pos2;
+		if(body->GetUserData()!=NULL){
+			CCSprite *sprite=(CCSprite *)body->GetUserData();
+			this->removeChild(sprite, true);
+		}
+		_world->DestroyBody(body);
+	}
+
+	if(toDestory.size()>0){
+		CocosDenshion::SimpleAudioEngine::sharedEngine()->playEffect("blip.caf");
+	}
+
+	if(!blockFound){
+		GameOverScene *gameOverScene=GameOverScene::create();
+		gameOverScene->getLayer()->getLabel()->setString("You Win!");
+		CCDirector::sharedDirector()->replaceScene(gameOverScene);
 	}
 }
 
@@ -285,6 +386,22 @@ HelloWorld::~HelloWorld()
 {
 	CC_SAFE_DELETE(_world);
 	_groundBody=NULL;
+	delete _contactListener;
+}
+
+void HelloWorld::Trace(char *szFormat, ...)
+{
+    char szTempBuf[2048] ;
+	TCHAR *ttt;
+    va_list vlMarker ;
+
+    va_start(vlMarker,szFormat) ;
+    vsprintf(szTempBuf,szFormat,vlMarker) ;
+    va_end(vlMarker) ;
+
+	ttt = (TCHAR*)calloc(1,strlen(szTempBuf)*2);
+	MultiByteToWideChar(CP_ACP, 0, szTempBuf, strlen(szTempBuf), ttt, strlen(szTempBuf)*2);
+    OutputDebugString(ttt) ;
 }
 
 
