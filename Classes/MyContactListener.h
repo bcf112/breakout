@@ -1,6 +1,5 @@
 #include "Box2D/Box2D.h"
 #include <vector>
-#include <algorithm>
 
 struct MyContact{
 	b2Fixture *fixtureA;

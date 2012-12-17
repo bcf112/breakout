@@ -62,6 +62,7 @@ bool HelloWorld::init()
 
         // Create a menu with the "close" menu item, it's an auto release object.
 		CCMenu* pMenu = CCMenu::create(pCloseItem, pPauseItem, NULL);
+
         pMenu->setPosition(CCPointZero);
         CC_BREAK_IF(! pMenu);
 
@@ -196,14 +197,14 @@ bool HelloWorld::init()
 			CCSprite *block=CCSprite::create("block.jpg");
 			int xOffset=xPadding+block->getContentSize().width/2 + ((block->getContentSize().width+xPadding)*i);
 			int yOffset=yPadding+block->getContentSize().height/2 + ((block->getContentSize().height+yPadding)*j);
-			block->setPosition(ccp(xOffset, 250-yOffset));
+			block->setPosition(ccp(xOffset, winSize.height-yOffset));
 			block->setTag(2);
 			this->addChild(block);
 
 			//block body ¸¸µé±â
 			b2BodyDef blockBodyDef;
 			blockBodyDef.type=b2_dynamicBody;
-			blockBodyDef.position.Set(xOffset/PTM_RATIO, 250/PTM_RATIO);
+			blockBodyDef.position.Set(xOffset/PTM_RATIO, winSize.height/PTM_RATIO);
 			blockBodyDef.userData=block;
 			b2Body *blockBody=_world->CreateBody(&blockBodyDef);
 
