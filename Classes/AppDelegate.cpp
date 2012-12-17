@@ -32,6 +32,7 @@ bool AppDelegate::applicationDidFinishLaunching()
 
     // create a scene. it's an autorelease object
 	StartMenuScene *pScene = StartMenuScene::create();
+	//CCScene *pScene=HelloWorld::scene();
 
     // run
     pDirector->runWithScene(pScene);

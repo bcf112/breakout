@@ -28,7 +28,6 @@ public:
 	void tick(float dt);
 
 	~HelloWorld();
-	//virtual void draw();
 	virtual void ccTouchesBegan(CCSet *touches, CCEvent *pEvent);
 	virtual void ccTouchesMoved(CCSet *touches, CCEvent *pEvent);
 	virtual void ccTouchesCancelled(CCSet *touches, CCEvent *pEvent);

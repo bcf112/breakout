@@ -3,9 +3,10 @@
 
 #include "HelloWorldScene.h"
 #include "GameOverScene.h"
-#include <SimpleAudioEngine.h>
+#include "SimpleAudioEngine.h"
 
 using namespace cocos2d;
+using namespace CocosDenshion;
 
 CCScene* HelloWorld::scene()
 {
@@ -228,7 +229,7 @@ bool HelloWorld::init()
 		}
 
 		//배경음악
-		CocosDenshion::SimpleAudioEngine::sharedEngine()->playBackgroundMusic("background-music-aac.caf");
+		SimpleAudioEngine::sharedEngine()->playBackgroundMusic("background-music-aac.caf");
 
 		//pause 상태 감시
 		HelloWorld::isPaused=false;
@@ -255,6 +256,7 @@ bool HelloWorld::init()
 
     return bRet;
 }
+
 
 void HelloWorld::ccTouchesBegan(CCSet *touches, CCEvent *pEvent){
 	if(_mouseJoint!=NULL){
@@ -409,7 +411,7 @@ void HelloWorld::tick(float dt){
 	}
 
 	if(toDestory.size()>0){
-		CocosDenshion::SimpleAudioEngine::sharedEngine()->playEffect("blip.caf");
+		SimpleAudioEngine::sharedEngine()->playEffect("blip.caf");
 	}
 
 	if(!blockFound){
