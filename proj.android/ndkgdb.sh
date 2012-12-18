@@ -1,4 +1,4 @@
-APPNAME="breakout"
+APPNAME="breakout_android"
 APP_ANDROID_NAME="org.cocos2dx.breakout"
 
 if [ -z "${SDK_ROOT+aaa}" ]; then

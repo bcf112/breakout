@@ -1,4 +1,4 @@
-APPNAME="breakout"
+APPNAME="breakout_android"
 
 # options
 
