@@ -19,13 +19,13 @@ bool StartMenuLayer::init()
 
 	CCMenu *menu=CCMenu::create(startItem, closeItem, NULL);
 	menu->setPosition(winSize.width/2, winSize.height/2);
-
 	this->addChild(menu);
 
 	CCLabelTTF *label=CCLabelTTF::create("BreakOut", "Arial", 40);
 	label->setColor(ccc3(255, 255, 255));
 	label->setPosition(ccp(winSize.width/2, winSize.height/2 + 50));
 	this->addChild(label);
+	
 	return true;
 }
 

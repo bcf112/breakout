@@ -217,6 +217,10 @@
 				RelativePath="..\Classes\StartMenuScene.cpp"
 				>
 			</File>
+			<File
+				RelativePath="..\Classes\VisibleRect.cpp"
+				>
+			</File>
 		</Filter>
 		<Filter
 			Name="include"
@@ -248,6 +252,10 @@
 			</File>
 			<File
 				RelativePath="..\Classes\StartMenuScene.h"
+				>
+			</File>
+			<File
+				RelativePath="..\Classes\VisibleRect.h"
 				>
 			</File>
 		</Filter>
