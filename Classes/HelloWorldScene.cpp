@@ -1,10 +1,9 @@
 //pixel을 box2d의 meter 단위로 바꾸기 위해 PTM_RATIO로 크기를 나눈다.
-#define PTM_RATIO 32
+#define PTM_RATIO 32.0
 
 #include "HelloWorldScene.h"
 #include "GameOverScene.h"
 #include "SimpleAudioEngine.h"
-#include "VisibleRect.h"
 
 using namespace cocos2d;
 using namespace CocosDenshion;
@@ -74,7 +73,7 @@ bool HelloWorld::init()
 
 		// 레이어에 공 sprite 추가
 		CCSize winSize=CCDirector::sharedDirector()->getWinSize();
-		CCSprite *ball=CCSprite::create("Ball.jpg");	
+		CCSprite *ball=CCSprite::create("ball.jpg");	
 		ball->setTag(1);
 		ball->setPosition(ccp(100, 100));
 		this->addChild(ball);
@@ -92,11 +91,10 @@ bool HelloWorld::init()
 		// 하나의 body object에 많은 fixture object를 넣을 수 있다.복잡한 객체를 만들 때 편리할 것이다.
 		// step 함수는 물리 시뮬레이션이 동작하게 하는 역할을 한다.
 
+		// 중력 생성 y축으로 -30을 줬으니 body object들은 바닥으로 떨어질 것이다. 
 		b2Vec2 gravity=b2Vec2(0.0f, 0.0f);
+		bool doSleep=true;
 		_world=new b2World(gravity);
-		_world->SetAllowSleeping(true);
-		_world->SetContinuousPhysics(true);
-		
 
 		//
 		// 화면 모서리 만들기
@@ -112,18 +110,13 @@ bool HelloWorld::init()
 		groundBoxDef.shape=&groundBox;
 		//b2Vec2(0, 0) -> 아랫쪽에서 왼쪽
 		//b2Vec2(winSize.width/PTM_RATIO) -> 아랫쪽에서 오른쪽
-
-		//위
-		groundBox.Set(b2Vec2(VisibleRect::leftBottom().x/PTM_RATIO, VisibleRect::leftBottom().y/PTM_RATIO), b2Vec2(VisibleRect::rightBottom().x/PTM_RATIO, VisibleRect::rightBottom().y/PTM_RATIO));
+		groundBox.Set(b2Vec2(0, 0), b2Vec2(winSize.width/PTM_RATIO, 0));
 		_bottomFixture=_groundBody->CreateFixture(&groundBoxDef);
-		//아래
-		groundBox.Set(b2Vec2(VisibleRect::leftTop().x/PTM_RATIO, VisibleRect::leftTop().y/PTM_RATIO), b2Vec2(VisibleRect::rightTop().x/PTM_RATIO, VisibleRect::rightTop().y/PTM_RATIO));
+		groundBox.Set(b2Vec2(0, 0), b2Vec2(0, winSize.height/PTM_RATIO));
 		_groundBody->CreateFixture(&groundBoxDef);
-		//좌
-		groundBox.Set(b2Vec2(VisibleRect::leftBottom().x/PTM_RATIO, VisibleRect::leftBottom().y/PTM_RATIO), b2Vec2(VisibleRect::leftTop().x/PTM_RATIO, VisibleRect::leftTop().y/PTM_RATIO));
+		groundBox.Set(b2Vec2(0, winSize.height/PTM_RATIO), b2Vec2(winSize.width/PTM_RATIO, winSize.height/PTM_RATIO));
 		_groundBody->CreateFixture(&groundBoxDef);
-		//우
-		groundBox.Set(b2Vec2(VisibleRect::rightBottom().x/PTM_RATIO, VisibleRect::rightBottom().y/PTM_RATIO), b2Vec2(VisibleRect::rightTop().x/PTM_RATIO, VisibleRect::rightTop().y/PTM_RATIO));
+		groundBox.Set(b2Vec2(winSize.width/PTM_RATIO, winSize.height/PTM_RATIO), b2Vec2(winSize.width/PTM_RATIO, 0));
 		_groundBody->CreateFixture(&groundBoxDef);
 
 		//
@@ -201,7 +194,7 @@ bool HelloWorld::init()
 			static int yPadding=40;
 
 			//layer에 block 만들기
-			CCSprite *block=CCSprite::create("Block.jpg");
+			CCSprite *block=CCSprite::create("block.jpg");
 			int xOffset=xPadding+block->getContentSize().width/2 + ((block->getContentSize().width+xPadding)*i);
 			int yOffset=yPadding+block->getContentSize().height/2 + ((block->getContentSize().height+yPadding)*j);
 			block->setPosition(ccp(xOffset, winSize.height-yOffset));
@@ -243,7 +236,7 @@ bool HelloWorld::init()
 		HelloWorld::isPaused=false;
 
 		//ProgressTimer 생성하기
-		CCSprite *progressImage=CCSprite::create("Paddle.jpg");
+		CCSprite *progressImage=CCSprite::create("paddle.jpg");
 		CCProgressTimer *progressTimeBar=CCProgressTimer::create(progressImage);
 		progressTimeBar->setType(kCCProgressTimerTypeBar);
 		progressTimeBar->setPosition(ccp(40, 10));
@@ -273,6 +266,7 @@ void HelloWorld::ccTouchesBegan(CCSet *touches, CCEvent *pEvent){
 	
 	CCTouch *myTouch=(CCTouch *)touches->anyObject();
 	CCPoint location=myTouch->getLocation();
+	//location=CCDirector::sharedDirector()->convertToGL(location);
 	b2Vec2 locationWorld=b2Vec2(location.x/PTM_RATIO, location.y/PTM_RATIO);
 
 	//MouseJoint는 body를 특정한 점으로 이동시키기 위해 사용한다.
@@ -298,6 +292,7 @@ void HelloWorld::ccTouchesMoved(CCSet *touches, CCEvent *pEvent){
 
 	CCTouch *myTouch=(CCTouch *)touches->anyObject();
 	CCPoint location=myTouch->getLocation();
+	//location=CCDirector::sharedDirector()->convertToGL(location);
 	b2Vec2 locationWorld=b2Vec2(location.x/PTM_RATIO, location.y/PTM_RATIO);
 
 	_mouseJoint->SetTarget(locationWorld);
@@ -436,7 +431,6 @@ void HelloWorld::gameOverCallback(){
 HelloWorld::~HelloWorld()
 {
 	CC_SAFE_DELETE(_world);
-	_world=NULL;
 	_groundBody=NULL;
 	delete _contactListener;
 }

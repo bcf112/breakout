@@ -11,8 +11,7 @@ LOCAL_SRC_FILES := hellocpp/main.cpp \
                    ../../Classes/HelloWorldScene.cpp \
                    ../../Classes/GameOverScene.cpp \
                    ../../Classes/MyContactListener.cpp \
-                   ../../Classes/StartMenuScene.cpp \
-                   ../../Classes/VisibleRect.cpp
+                   ../../Classes/StartMenuScene.cpp
                    
 LOCAL_C_INCLUDES := $(LOCAL_PATH)/../../Classes \
 					
